@@ -16,9 +16,8 @@ void setup() {
   strip.show(); // Initialize all pixels to 'off'
 }
 
-// *** REPLACE FROM HERE ***********************************************************
 void loop() {
-  Sparkle(0xff, 0xff, 0xff, random(100,200));
+  Sparkle(0xff, 0xff, 0xff, random(10,200));
 }
 
 void Sparkle(byte red, byte green, byte blue, int SpeedDelay) {
@@ -28,7 +27,6 @@ void Sparkle(byte red, byte green, byte blue, int SpeedDelay) {
   delay(SpeedDelay);
   setPixel(Pixel,0,0,0);
 }
-// *** REPLACE TO HERE ***************************************************************
 
 void showStrip() {
  #ifdef ADAFRUIT_NEOPIXEL_H 
