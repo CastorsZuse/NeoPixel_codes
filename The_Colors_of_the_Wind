@@ -1,0 +1,142 @@
+// The Colors of the Wind, Named by: @RatBallDnD
+
+#include <Adafruit_NeoPixel.h>
+
+// IMPORTANT control pin and LED count need to match the physical circuit in order for the code to work correctly
+
+#define PIXEL_PIN 6  // the NeoPixel control pin
+#define LED_COUNT 98 // the total number of LEDs on the string--NeoPixel contructor argument
+#define FIREPIN      4  // Fire button
+int buttonState = 0;
+boolean oldState = HIGH;
+
+// PARAMETERS--these values may be varied to adjust the operation of the LEDs
+#define VMAX       65   // the maximum value that can be sent to any one of the RGB channels--255 is the upper limit
+#define VMIN       15   // the minimum non-zero value that can be sent to any one of the RGB channels
+#define SLOW       5   // slows down the transition between values when changing LED RGB values in microseconds
+#define SWITCH_MAX 13   // the max value for the switch statement--should be >7. See comment below
+#define SWITCH_MIN 1    // the minimum for the switch statement--should be 1. See comment below
+
+/*
+  --------------------------SWITCH_MIN and SWITCH_MAX--------------------------
+  The main switch function below choses which RGB channels to change using 
+  random(SWITCH_MIN, SWITCH_MAX). Values 1 through 7 (see constants below) 
+  select combination of channels to change. values outside that range will hit
+  the switch default case and turn the LED off.
+  Therefor a SWITCH_MIN > 1 or SWITCH_MAX < 8 will omit cases.
+  SWITCH_MIN 1 and SWITCH_MAX 8 would mean that the default case should never 
+  get called; The greater the value of SWITCH_MAX above 8 determines a greater 
+  probability of the default case gettign hit. 
+  With SWITCH_MIN at 1 the ratio of the probability of an LED being turned off
+  is approximately (SWITCH_MAX-7)/7:1
+*/
+
+// constants for the switch statement
+#define RED            1
+#define GREEN          2
+#define RED_AND_GREEN  3
+#define BLUE           4
+#define RED_AND_BLUE   5
+#define GREEN_AND_BLUE 6
+#define RGB            7
+
+// Create an instance of the Adafruit_NeoPixel class called "leds"
+Adafruit_NeoPixel leds = Adafruit_NeoPixel(LED_COUNT, PIXEL_PIN, NEO_RGB + NEO_KHZ800);
+
+void setup() {
+  pinMode(FIREPIN, INPUT_PULLUP);
+  pinMode(PIXEL_PIN, OUTPUT);
+  leds.begin();
+  leds.show(); //clears the leds
+}
+
+void changeColor(long led, uint8_t newR, uint8_t newG, uint8_t newB) {
+  //capture the current state of the led
+  uint8_t currentR = (leds.getPixelColor(led) >> 16);
+  uint8_t currentG = (leds.getPixelColor(led) >>  8);
+  uint8_t currentB = (leds.getPixelColor(led)      );
+
+  boolean changing = true;
+  while (changing) {
+    changing = false;
+    if (currentR < newR) {
+      currentR++;
+      leds.setPixelColor(led, currentR, currentG, currentB);
+      changing = true;
+    } else if (currentR > newR) {
+      currentR--;
+      leds.setPixelColor(led, currentR, currentG, currentB);
+      changing = true;
+    }
+
+    if (currentG < newG) {
+      currentG++;
+      leds.setPixelColor(led, currentR, currentG, currentB);
+      changing = true;
+    } else if (currentG > newG) {
+      currentG--;
+      leds.setPixelColor(led, currentR, currentG, currentB);
+      changing = true;
+    }
+
+    if (currentB < newB) {
+      currentB++;
+      leds.setPixelColor(led, currentR, currentG, currentB);
+      changing = true;
+    } else if (currentB > newB) {
+      currentB--;
+      leds.setPixelColor(led, currentR, currentG, currentB);
+      changing = true;
+    }
+  leds.show();
+  delayMicroseconds(SLOW); // pauses breifly to slow the overall transition
+  }
+}
+
+void loop() {
+  uint8_t  i;
+  boolean newState = digitalRead(FIREPIN);  
+  //Button switch
+  buttonState = digitalRead(FIREPIN);
+    if((newState == LOW) && (oldState == HIGH)) {
+    // Short delay to debounce button.
+    delay(5);
+    // Check if button is still low after debounce.
+    newState = digitalRead(FIREPIN);
+    if(newState == LOW) {      
+  // Run It:///////////////////////////////////////////////////////////////////////////////    
+switch (random(SWITCH_MIN, SWITCH_MAX)) {
+    case RED: // sends random value to the red led and 0 to others
+      changeColor(random(LED_COUNT), (uint8_t)random(VMIN, VMAX), 0x00, 0x00);
+      break;
+    case GREEN:// sends random value to the green led and 0 to others
+      changeColor(random(LED_COUNT), 0x00, (uint8_t)random(VMIN, VMAX), 0x00);
+      break;
+    case RED_AND_GREEN: // sends random value to the red and green leds and 0 to blue
+      changeColor(random(LED_COUNT), (uint8_t)random(VMIN, VMAX), (uint8_t)random(VMIN, VMAX), 0x00);
+      break;
+    case BLUE: // sends random value to the blue led and 0 to others
+      changeColor(random(LED_COUNT), 0x00, 0x00, (uint8_t)random(VMIN, VMAX));
+      break;
+    case RED_AND_BLUE: // sends random value to the red and blue leds and 0 to green
+      changeColor(random(LED_COUNT), (uint8_t)random(VMIN, VMAX), 0x00, (uint8_t)random(VMIN, VMAX));
+      break;
+    case GREEN_AND_BLUE: // sends random value to the green and blue leds and 0 to red
+      changeColor(random(LED_COUNT), 0x00, (uint8_t)random(VMIN, VMAX), (uint8_t)random(VMIN, VMAX));
+      break;
+    case RGB: // sends random value to the each of the leds
+      changeColor(random(LED_COUNT), (uint8_t)random(VMIN, VMAX), (uint8_t)random(VMIN, VMAX), (uint8_t)random(VMIN, VMAX));
+      break;
+    default:
+      changeColor(random(LED_COUNT), 0x00, 0x00, 0x00);
+      break;
+  }
+  /////////////////////////////////////////////////////////////////////////////////////////
+  } 
+  
+  else {
+     leds.setPixelColor(i, 0,0,0); //Button not pressed, turn off pixels
+     leds.show(); //Show no pixels
+  }
+}
+}
